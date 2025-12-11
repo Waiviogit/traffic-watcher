@@ -112,9 +112,15 @@ cron.schedule('*/5 * * * *', async () => {
   await telegramService.checkThresholds();
 });
 
-// Serve frontend in production
+// Serve frontend in production (SPA fallback)
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.get('*', (req, res, next) => {
+    // Don't serve index.html for static asset requests
+    const ext = path.extname(req.path);
+    if (ext && ext !== '.html') {
+      // If it's a static file request that wasn't found, return 404
+      return res.status(404).send('Not found');
+    }
     res.sendFile(path.join(__dirname, '../public/index.html'));
   });
 }
