@@ -14,7 +14,16 @@ app.use(express.json());
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../public')));
+  const staticPath = path.join(__dirname, '../public');
+  const basePath = process.env.BASE_PATH || '/';
+  
+  // Serve static files at base path
+  app.use(basePath, express.static(staticPath));
+  
+  // Also serve at root for backwards compatibility
+  if (basePath !== '/') {
+    app.use(express.static(staticPath));
+  }
 }
 
 // API Routes
@@ -114,15 +123,25 @@ cron.schedule('*/5 * * * *', async () => {
 
 // Serve frontend in production (SPA fallback)
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res, next) => {
+  const basePath = process.env.BASE_PATH || '/';
+  const indexFile = path.join(__dirname, '../public/index.html');
+  
+  const spaFallback = (req, res) => {
     // Don't serve index.html for static asset requests
     const ext = path.extname(req.path);
     if (ext && ext !== '.html') {
-      // If it's a static file request that wasn't found, return 404
       return res.status(404).send('Not found');
     }
-    res.sendFile(path.join(__dirname, '../public/index.html'));
-  });
+    res.sendFile(indexFile);
+  };
+  
+  // Handle SPA routes at base path
+  app.get(`${basePath}*`, spaFallback);
+  
+  // Also handle root for backwards compatibility
+  if (basePath !== '/') {
+    app.get('*', spaFallback);
+  }
 }
 
 app.listen(PORT, '0.0.0.0', () => {
