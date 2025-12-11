@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+frontend/dist/
+backend/public/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# SSL certificates (if you add them)
+ssl/
+*.pem
+*.key
+*.crt
+
+# vnstat data (handled by volume)
+/var/lib/vnstat/

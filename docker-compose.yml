@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  traffic-watcher:
+    build: .
+    container_name: traffic-watcher
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - vnstat-data:/var/lib/vnstat
+    cap_add:
+      - NET_ADMIN
+
+volumes:
+  vnstat-data:
