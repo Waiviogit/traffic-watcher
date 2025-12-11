@@ -8,6 +8,7 @@ const telegramService = require('./services/telegram');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const BASE_PATH = process.env.BASE_PATH || '/';
 
 app.use(cors());
 app.use(express.json());
@@ -15,19 +16,20 @@ app.use(express.json());
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, '../public');
-  const basePath = process.env.BASE_PATH || '/';
   
   // Serve static files at base path
-  app.use(basePath, express.static(staticPath));
+  app.use(BASE_PATH, express.static(staticPath));
   
   // Also serve at root for backwards compatibility
-  if (basePath !== '/') {
+  if (BASE_PATH !== '/') {
     app.use(express.static(staticPath));
   }
 }
 
-// API Routes
-app.get('/api/traffic/summary', async (req, res) => {
+// Create API router
+const apiRouter = express.Router();
+
+apiRouter.get('/traffic/summary', async (req, res) => {
   try {
     const data = await vnstatService.getSummary();
     res.json(data);
@@ -36,7 +38,7 @@ app.get('/api/traffic/summary', async (req, res) => {
   }
 });
 
-app.get('/api/traffic/hourly', async (req, res) => {
+apiRouter.get('/traffic/hourly', async (req, res) => {
   try {
     const data = await vnstatService.getHourly();
     res.json(data);
@@ -45,7 +47,7 @@ app.get('/api/traffic/hourly', async (req, res) => {
   }
 });
 
-app.get('/api/traffic/daily', async (req, res) => {
+apiRouter.get('/traffic/daily', async (req, res) => {
   try {
     const data = await vnstatService.getDaily();
     res.json(data);
@@ -54,7 +56,7 @@ app.get('/api/traffic/daily', async (req, res) => {
   }
 });
 
-app.get('/api/traffic/weekly', async (req, res) => {
+apiRouter.get('/traffic/weekly', async (req, res) => {
   try {
     const data = await vnstatService.getWeekly();
     res.json(data);
@@ -63,7 +65,7 @@ app.get('/api/traffic/weekly', async (req, res) => {
   }
 });
 
-app.get('/api/traffic/monthly', async (req, res) => {
+apiRouter.get('/traffic/monthly', async (req, res) => {
   try {
     const data = await vnstatService.getMonthly();
     res.json(data);
@@ -72,7 +74,7 @@ app.get('/api/traffic/monthly', async (req, res) => {
   }
 });
 
-app.get('/api/traffic/live', async (req, res) => {
+apiRouter.get('/traffic/live', async (req, res) => {
   try {
     const data = await vnstatService.getLive();
     res.json(data);
@@ -81,7 +83,7 @@ app.get('/api/traffic/live', async (req, res) => {
   }
 });
 
-app.get('/api/interfaces', async (req, res) => {
+apiRouter.get('/interfaces', async (req, res) => {
   try {
     const data = await vnstatService.getInterfaces();
     res.json(data);
@@ -90,10 +92,15 @@ app.get('/api/interfaces', async (req, res) => {
   }
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Mount API router at both paths
+app.use('/api', apiRouter);
+if (BASE_PATH !== '/') {
+  app.use(`${BASE_PATH}/api`, apiRouter);
+}
 
 // Initialize Telegram bot
 telegramService.init();
@@ -123,11 +130,10 @@ cron.schedule('*/5 * * * *', async () => {
 
 // Serve frontend in production (SPA fallback)
 if (process.env.NODE_ENV === 'production') {
-  const basePath = process.env.BASE_PATH || '/';
   const indexFile = path.join(__dirname, '../public/index.html');
   
   const spaFallback = (req, res) => {
-    // Don't serve index.html for static asset requests
+    // Don't serve index.html for static asset or API requests
     const ext = path.extname(req.path);
     if (ext && ext !== '.html') {
       return res.status(404).send('Not found');
@@ -136,10 +142,10 @@ if (process.env.NODE_ENV === 'production') {
   };
   
   // Handle SPA routes at base path
-  app.get(`${basePath}*`, spaFallback);
+  app.get(`${BASE_PATH}*`, spaFallback);
   
   // Also handle root for backwards compatibility
-  if (basePath !== '/') {
+  if (BASE_PATH !== '/') {
     app.get('*', spaFallback);
   }
 }
