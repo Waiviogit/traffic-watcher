@@ -2,7 +2,10 @@ version: '3.7'
 
 services:
   traffic-watcher:
-    build: .
+    build:
+      context: .
+      args:
+        BASE_PATH: /traffic
     container_name: traffic-watcher
     restart: unless-stopped
     network_mode: host

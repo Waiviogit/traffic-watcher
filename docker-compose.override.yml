@@ -5,6 +5,10 @@ version: '3.7'
 
 services:
   traffic-watcher:
+    build:
+      context: .
+      args:
+        BASE_PATH: /
     network_mode: bridge
     ports:
       - "7001:7001"
