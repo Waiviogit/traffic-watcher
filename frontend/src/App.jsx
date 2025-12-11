@@ -11,7 +11,8 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const API_BASE = '/api';
+// Use Vite's base URL for API calls (handles /traffic prefix in production)
+const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/api`;
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes === 0) return '0 B';
