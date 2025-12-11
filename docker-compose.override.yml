@@ -1,0 +1,11 @@
+version: '3.7'
+
+# Local development override (WSL2/Windows)
+# This file is auto-loaded by docker-compose and overrides the main config
+
+services:
+  traffic-watcher:
+    network_mode: bridge
+    ports:
+      - "7001:7001"
+
